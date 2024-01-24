@@ -11,7 +11,7 @@ namespace isci.modulbasis
 {
     public class Konfiguration : Parameter
     {
-        public Konfiguration(string datei) : base(datei) {
+        public Konfiguration(string[] args) : base(args) {
 
         }
     }
@@ -20,45 +20,59 @@ namespace isci.modulbasis
     {
         static void Main(string[] args)
         {
-            var konfiguration = new Konfiguration("konfiguration.json");
-            
-            var structure = new Datenstruktur(konfiguration.OrdnerDatenstruktur);
+            var konfiguration = new Konfiguration(args);
 
-            var dm = new Datenmodell(konfiguration.Identifikation);
+            var ausfuehrungsmodell = new Ausführungsmodell(konfiguration);
+
+            var structure = new Datenstruktur(konfiguration);
+
+            var dm = new Datenmodell(konfiguration);
             var example = new dtInt32(0, "example");
             dm.Dateneinträge.Add(example);
 
             var beschreibung = new Modul(konfiguration.Identifikation, "isci.modulbasis", new ListeDateneintraege(){example});
             beschreibung.Name = "Modulbasis Ressource " + konfiguration.Identifikation;
             beschreibung.Beschreibung = "Modulbasis";
-            beschreibung.Speichern(konfiguration.OrdnerBeschreibungen + "/" + konfiguration.Identifikation + ".json");
+            beschreibung.Speichern();
 
-            dm.Speichern(konfiguration.OrdnerDatenmodelle + "/" + konfiguration.Identifikation + ".json");
+            dm.Speichern(konfiguration);
 
             structure.DatenmodellEinhängen(dm);
             structure.DatenmodelleEinhängenAusOrdner(konfiguration.OrdnerDatenmodelle);
             structure.Start();
-
-            var Zustand = new dtZustand(konfiguration.OrdnerDatenstruktur);
-            Zustand.Start();
             
             while(true)
             {
-                Zustand.Lesen();
+                structure.Zustand.WertAusSpeicherLesen();
 
-                var erfüllteTransitionen = konfiguration.Ausführungstransitionen.Where(a => a.Eingangszustand == (System.Int32)Zustand.value);
-                if (erfüllteTransitionen.Count<Ausführungstransition>() <= 0) continue;
-
-                if ((System.Int32)Zustand.value == 0)
+                if (ausfuehrungsmodell.ContainsKey(structure.Zustand.Value()))
                 {
-                    example.value = 0;
-                } else {
-                    example.value = 1;
-                }
-                structure.Schreiben();
+                    var schritt_param = (string)ausfuehrungsmodell[structure.Zustand.Value()].Parametrierung;
 
-                Zustand.value = erfüllteTransitionen.First<Ausführungstransition>().Ausgangszustand;
-                Zustand.Schreiben();
+                    switch (schritt_param)
+                    {
+                        case "E":
+                            {
+                                
+                                break;
+                            }
+                        case "A":
+                            {
+                                if ((System.Int32)example.value == 255)
+                                {
+                                    example.value = (System.Int32)0;
+                                }
+                                else
+                                {
+                                    example.value = (System.Int32)example.value + 1;
+                                }
+                                break;
+                            }
+                    }
+
+                    structure.Zustand++;
+                    structure.Zustand.WertInSpeicherSchreiben();
+                }
             }
         }
     }
