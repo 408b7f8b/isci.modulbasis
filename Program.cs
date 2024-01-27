@@ -45,7 +45,7 @@ namespace isci.modulbasis
             {
                 structure.Zustand.WertAusSpeicherLesen();
 
-                if (ausfuehrungsmodell.ContainsKey(structure.Zustand.Value()))
+                if (ausfuehrungsmodell.modulAktivieren(structure.Zustand))
                 {
                     var schritt_param = (string)ausfuehrungsmodell[structure.Zustand.Value()].Parametrierung;
 
