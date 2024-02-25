@@ -50,9 +50,11 @@ namespace isci.modulbasis
             var ausfuehrungsmodell = new Ausführungsmodell(konfiguration, structure.Zustand);            
 
             //Erstellung einer Beschreibung für die Modulinstanz und Ablegen als Datei im Standardordner.
-            var beschreibung = new Modul(konfiguration.Identifikation, "isci.modulbasis", new ListeDateneintraege(){example});
-            beschreibung.Name = "Modulbasis Ressource " + konfiguration.Identifikation;
-            beschreibung.Beschreibung = konfiguration.Beispiel;
+            var beschreibung = new Modul(konfiguration.Identifikation, "isci.modulbasis", new ListeDateneintraege(){example})
+            {
+                Name = "Modulbasis Ressource " + konfiguration.Identifikation,
+                Beschreibung = konfiguration.Beispiel
+            };
             beschreibung.Speichern();
             
             //Arbeitsschleife
@@ -73,21 +75,28 @@ namespace isci.modulbasis
                             }
                         case "A":
                             {
-                                if ((System.Int32)example.value == 255)
+                                structure.Lesen();
+
+                                if (example.Wert == 255)
                                 {
-                                    example.value = (System.Int32)0;
+                                    example.Wert = 0;
                                 }
                                 else
                                 {
-                                    example.value = (System.Int32)example.value + 1;
+                                    example.Wert = example.Wert + 1;
                                 }
+
+                                structure.Schreiben();
                                 break;
                             }
                     }
 
-                    structure.Zustand++; //Zustandswert inkrementieren.
+                    ausfuehrungsmodell.Folgezustand();
                     structure.Zustand.WertInSpeicherSchreiben(); //Zustandswert in Datenstruktur übernehmen.
                 }
+
+                //isci.Helfer.SleepForMicroseconds(konfiguration.PauseArbeitsschleifeUs);
+                System.Threading.Thread.Sleep(1);
             }
         }
     }
